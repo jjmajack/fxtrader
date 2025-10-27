@@ -27,6 +27,11 @@ class TradePlanController extends Controller
             $query->where('status', $request->status);
         }
 
+        // Filter by trade result
+        if ($request->filled('trade_result')) {
+            $query->where('trade_result', $request->trade_result);
+        }
+
         // Filter by trading pair
         if ($request->filled('trading_pair')) {
             $query->where('trading_pair', 'like', '%' . $request->trading_pair . '%');
@@ -199,5 +204,22 @@ class TradePlanController extends Controller
 
         return redirect()->back()
             ->with('success', 'Trade plan status updated successfully.');
+    }
+
+    /**
+     * Update the trade result of a trade plan.
+     */
+    public function updateResult(Request $request, TradePlan $tradePlan): RedirectResponse
+    {
+        $this->authorize('update', $tradePlan);
+
+        $validated = $request->validate([
+            'trade_result' => 'nullable|in:' . implode(',', array_keys(TradePlan::getTradeResults())),
+        ]);
+
+        $tradePlan->update($validated);
+
+        return redirect()->back()
+            ->with('success', 'Trade result updated successfully.');
     }
 }

@@ -28,12 +28,23 @@
                 <input type="text" class="form-control" id="search" name="search" 
                        value="{{ request('search') }}" placeholder="Search by title...">
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label for="status" class="form-label">Status</label>
                 <select class="form-select" id="status" name="status">
                     <option value="">All Statuses</option>
                     @foreach(\App\Models\TradePlan::getStatuses() as $key => $label)
                         <option value="{{ $key }}" {{ request('status') == $key ? 'selected' : '' }}>
+                            {{ $label }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="trade_result" class="form-label">Result</label>
+                <select class="form-select" id="trade_result" name="trade_result">
+                    <option value="">All Results</option>
+                    @foreach(\App\Models\TradePlan::getTradeResults() as $key => $label)
+                        <option value="{{ $key }}" {{ request('trade_result') == $key ? 'selected' : '' }}>
                             {{ $label }}
                         </option>
                     @endforeach
@@ -78,6 +89,7 @@
                             <th>Strategy</th>
                             <th>Pattern</th>
                             <th>Status</th>
+                            <th>Result</th>
                             <th>Entry Price</th>
                             <th>Stop Loss</th>
                             <th>Take Profit</th>
@@ -116,6 +128,24 @@
                                 <span class="badge status-{{ $plan->status }} status-badge">
                                     {{ ucfirst($plan->status) }}
                                 </span>
+                            </td>
+                            <td>
+                                @if($plan->trade_result)
+                                    @php
+                                        $resultClass = match($plan->trade_result) {
+                                            'profit' => 'bg-success',
+                                            'loss' => 'bg-danger',
+                                            'breakeven' => 'bg-warning',
+                                            'pending' => 'bg-secondary',
+                                            default => 'bg-light text-dark'
+                                        };
+                                    @endphp
+                                    <span class="badge {{ $resultClass }}">
+                                        {{ \App\Models\TradePlan::getTradeResults()[$plan->trade_result] ?? ucfirst($plan->trade_result) }}
+                                    </span>
+                                @else
+                                    <span class="text-muted">-</span>
+                                @endif
                             </td>
                             <td>
                                 @if($plan->entry_price)

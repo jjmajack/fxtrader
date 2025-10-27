@@ -32,6 +32,7 @@ Route::middleware('auth')->group(function () {
         // Trade Plans
         Route::resource('trade-plans', TradePlanController::class);
         Route::patch('/trade-plans/{tradePlan}/status', [TradePlanController::class, 'updateStatus'])->name('trade-plans.update-status');
+        Route::patch('/trade-plans/{tradePlan}/result', [TradePlanController::class, 'updateResult'])->name('trade-plans.update-result');
 
         // Trading Pairs Management
         Route::resource('trading-pairs', \App\Http\Controllers\TradingPairController::class);

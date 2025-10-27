@@ -38,13 +38,36 @@
                             </p>
                         </div>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-3">
                         <div class="mb-3">
                             <label class="form-label fw-bold">Status</label>
                             <p class="mb-0">
                                 <span class="badge status-{{ $tradePlan->status }} status-badge fs-6">
                                     {{ ucfirst($tradePlan->status) }}
                                 </span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Trade Result</label>
+                            <p class="mb-0">
+                                @if($tradePlan->trade_result)
+                                    @php
+                                        $resultClass = match($tradePlan->trade_result) {
+                                            'profit' => 'bg-success',
+                                            'loss' => 'bg-danger',
+                                            'breakeven' => 'bg-warning',
+                                            'pending' => 'bg-secondary',
+                                            default => 'bg-light text-dark'
+                                        };
+                                    @endphp
+                                    <span class="badge {{ $resultClass }} fs-6">
+                                        {{ \App\Models\TradePlan::getTradeResults()[$tradePlan->trade_result] ?? ucfirst($tradePlan->trade_result) }}
+                                    </span>
+                                @else
+                                    <span class="text-muted">Not set</span>
+                                @endif
                             </p>
                         </div>
                     </div>
@@ -369,6 +392,26 @@
                         </div>
                         <button type="submit" class="btn btn-outline-primary w-100">
                             <i class="bi bi-arrow-repeat"></i> Update Status
+                        </button>
+                    </form>
+
+                    <!-- Trade Result Update Form -->
+                    <form method="POST" action="{{ route('trade-plans.update-result', $tradePlan) }}" class="mt-3">
+                        @csrf
+                        @method('PATCH')
+                        <div class="mb-2">
+                            <label for="trade_result_update" class="form-label">Update Trade Result</label>
+                            <select class="form-select" id="trade_result_update" name="trade_result">
+                                <option value="">Select Result</option>
+                                @foreach(\App\Models\TradePlan::getTradeResults() as $key => $label)
+                                    <option value="{{ $key }}" {{ $tradePlan->trade_result == $key ? 'selected' : '' }}>
+                                        {{ $label }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-outline-success w-100">
+                            <i class="bi bi-check-circle"></i> Update Result
                         </button>
                     </form>
                 </div>

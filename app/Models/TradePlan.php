@@ -17,6 +17,7 @@ class TradePlan extends Model
             'strategy',
             'pattern_type',
             'status',
+            'trade_result',
             'entry_price',
             'exit_price',
             'stop_loss',
@@ -53,6 +54,12 @@ class TradePlan extends Model
     const STATUS_COMPLETED = 'completed';
     const STATUS_CANCELLED = 'cancelled';
     const STATUS_EXPIRED = 'expired';
+
+    // Trade result constants
+    const TRADE_RESULT_PROFIT = 'profit';
+    const TRADE_RESULT_LOSS = 'loss';
+    const TRADE_RESULT_BREAKEVEN = 'breakeven';
+    const TRADE_RESULT_PENDING = 'pending';
 
     // Trade type constants
     const TRADE_TYPE_LONG = 'long';
@@ -120,6 +127,19 @@ class TradePlan extends Model
             self::STATUS_COMPLETED => 'Completed',
             self::STATUS_CANCELLED => 'Cancelled',
             self::STATUS_EXPIRED => 'Expired',
+        ];
+    }
+
+    /**
+     * Get all possible trade results.
+     */
+    public static function getTradeResults(): array
+    {
+        return [
+            self::TRADE_RESULT_PROFIT => 'Profit',
+            self::TRADE_RESULT_LOSS => 'Loss',
+            self::TRADE_RESULT_BREAKEVEN => 'Breakeven',
+            self::TRADE_RESULT_PENDING => 'Pending',
         ];
     }
 
@@ -225,6 +245,38 @@ class TradePlan extends Model
     }
 
     /**
+     * Check if the trade resulted in profit.
+     */
+    public function isProfit(): bool
+    {
+        return $this->trade_result === self::TRADE_RESULT_PROFIT;
+    }
+
+    /**
+     * Check if the trade resulted in loss.
+     */
+    public function isLoss(): bool
+    {
+        return $this->trade_result === self::TRADE_RESULT_LOSS;
+    }
+
+    /**
+     * Check if the trade was breakeven.
+     */
+    public function isBreakeven(): bool
+    {
+        return $this->trade_result === self::TRADE_RESULT_BREAKEVEN;
+    }
+
+    /**
+     * Check if the trade result is pending.
+     */
+    public function isPendingResult(): bool
+    {
+        return $this->trade_result === self::TRADE_RESULT_PENDING || $this->trade_result === null;
+    }
+
+    /**
      * Calculate the profit/loss percentage.
      */
     public function getProfitLossPercentage(): ?float
@@ -290,5 +342,40 @@ class TradePlan extends Model
     public function hasChartImage(): bool
     {
         return !empty($this->chart_image);
+    }
+
+    /**
+     * Automatically determine trade result based on entry and exit prices.
+     */
+    public function determineTradeResult(): ?string
+    {
+        if (!$this->entry_price || !$this->exit_price) {
+            return self::TRADE_RESULT_PENDING;
+        }
+
+        $profitLossPercentage = $this->getProfitLossPercentage();
+        
+        if ($profitLossPercentage > 0) {
+            return self::TRADE_RESULT_PROFIT;
+        } elseif ($profitLossPercentage < 0) {
+            return self::TRADE_RESULT_LOSS;
+        } else {
+            return self::TRADE_RESULT_BREAKEVEN;
+        }
+    }
+
+    /**
+     * Update trade result automatically based on current prices.
+     */
+    public function updateTradeResult(): bool
+    {
+        $newResult = $this->determineTradeResult();
+        
+        if ($newResult !== $this->trade_result) {
+            $this->trade_result = $newResult;
+            return $this->save();
+        }
+        
+        return true;
     }
 }
