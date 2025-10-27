@@ -130,7 +130,7 @@
                                 </span>
                             </td>
                             <td>
-                                @if($plan->trade_result)
+                                @if($plan->status === 'completed' && $plan->trade_result)
                                     @php
                                         $resultClass = match($plan->trade_result) {
                                             'profit' => 'bg-success',
@@ -143,27 +143,29 @@
                                     <span class="badge {{ $resultClass }}">
                                         {{ \App\Models\TradePlan::getTradeResults()[$plan->trade_result] ?? ucfirst($plan->trade_result) }}
                                     </span>
+                                @elseif($plan->status === 'completed')
+                                    <span class="badge bg-secondary">Pending</span>
                                 @else
                                     <span class="text-muted">-</span>
                                 @endif
                             </td>
                             <td>
                                 @if($plan->entry_price)
-                                    ${{ $plan->formatPrice($plan->entry_price) }}
+                                    {{ $plan->formatPriceWithCurrency($plan->entry_price, $plan->getUserCurrencySymbol()) }}
                                 @else
                                     <span class="text-muted">-</span>
                                 @endif
                             </td>
                             <td>
                                 @if($plan->stop_loss)
-                                    ${{ $plan->formatPrice($plan->stop_loss) }}
+                                    {{ $plan->formatPriceWithCurrency($plan->stop_loss, $plan->getUserCurrencySymbol()) }}
                                 @else
                                     <span class="text-muted">-</span>
                                 @endif
                             </td>
                             <td>
                                 @if($plan->take_profit)
-                                    ${{ $plan->formatPrice($plan->take_profit) }}
+                                    {{ $plan->formatPriceWithCurrency($plan->take_profit, $plan->getUserCurrencySymbol()) }}
                                 @else
                                     <span class="text-muted">-</span>
                                 @endif
@@ -193,15 +195,17 @@
                                             current-status="{{ $plan->status }}"
                                         ></status-updater>
                                     </div>
-                                    <form method="POST" action="{{ route('trade-plans.destroy', $plan) }}" 
-                                          style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this trade plan?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-outline-danger">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </form>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" 
+                                            onclick="deleteTradePlan({{ $plan->id }})">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
                                 </div>
+                                
+                                <!-- Hidden form for delete action -->
+                                <form id="delete-form-{{ $plan->id }}" method="POST" action="{{ route('trade-plans.destroy', $plan) }}" style="display: none;">
+                                    @csrf
+                                    @method('DELETE')
+                                </form>
                             </td>
                         </tr>
                         @endforeach
@@ -225,4 +229,12 @@
         @endif
     </div>
 </div>
+
+<script>
+function deleteTradePlan(planId) {
+    if (confirm('Are you sure you want to delete this trade plan?')) {
+        document.getElementById('delete-form-' + planId).submit();
+    }
+}
+</script>
 @endsection

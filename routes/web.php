@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\TradePlanController;
+use App\Http\Controllers\ProfileController;
 
 // Public routes
 Route::get('/', function () {
@@ -25,6 +26,11 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    
+    // Profile Settings
+    Route::get('/profile/settings', [ProfileController::class, 'show'])->name('profile.settings');
+    Route::put('/profile/settings', [ProfileController::class, 'update'])->name('profile.update');
+    Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
     
     // Logout
     Route::post('/logout', [LogoutController::class, 'logout'])->name('logout');

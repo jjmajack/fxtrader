@@ -325,6 +325,22 @@ class TradePlan extends Model
     }
 
     /**
+     * Format a price with the user's preferred currency symbol.
+     */
+    public function formatPriceWithCurrency($price, $currencySymbol = '$'): string
+    {
+        return $currencySymbol . number_format($price, $this->getDecimalPrecision());
+    }
+
+    /**
+     * Get the user's preferred currency symbol for this trade plan.
+     */
+    public function getUserCurrencySymbol(): string
+    {
+        return $this->user->getCurrencySymbol();
+    }
+
+    /**
      * Get the chart image URL.
      */
     public function getChartImageUrl(): ?string
@@ -346,9 +362,15 @@ class TradePlan extends Model
 
     /**
      * Automatically determine trade result based on entry and exit prices.
+     * Only applies to completed trades.
      */
     public function determineTradeResult(): ?string
     {
+        // Only determine result for completed trades
+        if ($this->status !== self::STATUS_COMPLETED) {
+            return self::TRADE_RESULT_PENDING;
+        }
+
         if (!$this->entry_price || !$this->exit_price) {
             return self::TRADE_RESULT_PENDING;
         }
@@ -377,5 +399,25 @@ class TradePlan extends Model
         }
         
         return true;
+    }
+
+    /**
+     * Boot method to handle automatic trade result updates.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Automatically update trade result when status changes to completed
+        static::updating(function ($tradePlan) {
+            if ($tradePlan->isDirty('status') && $tradePlan->status === self::STATUS_COMPLETED) {
+                $tradePlan->trade_result = $tradePlan->determineTradeResult();
+            }
+            
+            // Clear trade result if status is not completed
+            if ($tradePlan->isDirty('status') && $tradePlan->status !== self::STATUS_COMPLETED) {
+                $tradePlan->trade_result = null;
+            }
+        });
     }
 }

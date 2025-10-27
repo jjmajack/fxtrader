@@ -52,7 +52,7 @@
                         <div class="mb-3">
                             <label class="form-label fw-bold">Trade Result</label>
                             <p class="mb-0">
-                                @if($tradePlan->trade_result)
+                                @if($tradePlan->status === 'completed' && $tradePlan->trade_result)
                                     @php
                                         $resultClass = match($tradePlan->trade_result) {
                                             'profit' => 'bg-success',
@@ -65,8 +65,10 @@
                                     <span class="badge {{ $resultClass }} fs-6">
                                         {{ \App\Models\TradePlan::getTradeResults()[$tradePlan->trade_result] ?? ucfirst($tradePlan->trade_result) }}
                                     </span>
+                                @elseif($tradePlan->status === 'completed')
+                                    <span class="badge bg-secondary fs-6">Pending</span>
                                 @else
-                                    <span class="text-muted">Not set</span>
+                                    <span class="text-muted">Not applicable</span>
                                 @endif
                             </p>
                         </div>
@@ -395,7 +397,8 @@
                         </button>
                     </form>
 
-                    <!-- Trade Result Update Form -->
+                    <!-- Trade Result Update Form - Only for completed trades -->
+                    @if($tradePlan->status === 'completed')
                     <form method="POST" action="{{ route('trade-plans.update-result', $tradePlan) }}" class="mt-3">
                         @csrf
                         @method('PATCH')
@@ -414,6 +417,7 @@
                             <i class="bi bi-check-circle"></i> Update Result
                         </button>
                     </form>
+                    @endif
                 </div>
             </div>
         </div>

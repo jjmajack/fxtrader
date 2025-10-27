@@ -79,9 +79,138 @@
     </div>
 </div>
 
-<!-- Recent Trade Plans -->
+<!-- Profit/Loss Summary Cards -->
+@if($totalCompletedTrades > 0)
+<div class="row mb-5">
+    <div class="col-12">
+        <h4 class="mb-4">
+            <i class="bi bi-graph-up-arrow text-success me-2"></i> Trading Performance
+        </h4>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card h-100 fade-in-up" style="animation-delay: 0.4s;">
+            <div class="card-body text-center p-4">
+                <div class="d-flex justify-content-center align-items-center mb-3">
+                    <div class="bg-success bg-opacity-10 rounded-circle p-3">
+                        <i class="bi bi-trophy text-success" style="font-size: 1.5rem;"></i>
+                    </div>
+                </div>
+                <h2 class="fw-bold text-success mb-1">{{ $totalProfitTrades }}</h2>
+                <p class="text-muted mb-0 fw-medium">Profitable Trades</p>
+                <small class="text-success">
+                    <i class="bi bi-arrow-up"></i> {{ $winRate }}% Win Rate
+                </small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card h-100 fade-in-up" style="animation-delay: 0.5s;">
+            <div class="card-body text-center p-4">
+                <div class="d-flex justify-content-center align-items-center mb-3">
+                    <div class="bg-danger bg-opacity-10 rounded-circle p-3">
+                        <i class="bi bi-graph-down text-danger" style="font-size: 1.5rem;"></i>
+                    </div>
+                </div>
+                <h2 class="fw-bold text-danger mb-1">{{ $totalLossTrades }}</h2>
+                <p class="text-muted mb-0 fw-medium">Loss Trades</p>
+                <small class="text-danger">
+                    <i class="bi bi-arrow-down"></i> {{ $totalCompletedTrades - $totalProfitTrades - $totalBreakevenTrades }}% Loss Rate
+                </small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card h-100 fade-in-up" style="animation-delay: 0.6s;">
+            <div class="card-body text-center p-4">
+                <div class="d-flex justify-content-center align-items-center mb-3">
+                    <div class="bg-warning bg-opacity-10 rounded-circle p-3">
+                        <i class="bi bi-dash-circle text-warning" style="font-size: 1.5rem;"></i>
+                    </div>
+                </div>
+                <h2 class="fw-bold text-warning mb-1">{{ $totalBreakevenTrades }}</h2>
+                <p class="text-muted mb-0 fw-medium">Breakeven Trades</p>
+                <small class="text-warning">
+                    <i class="bi bi-dash"></i> {{ $totalBreakevenTrades > 0 ? round(($totalBreakevenTrades / $totalCompletedTrades) * 100, 1) : 0 }}% Breakeven Rate
+                </small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-4">
+        <div class="card h-100 fade-in-up" style="animation-delay: 0.7s;">
+            <div class="card-body text-center p-4">
+                <div class="d-flex justify-content-center align-items-center mb-3">
+                    <div class="bg-{{ $netProfitLoss >= 0 ? 'success' : 'danger' }} bg-opacity-10 rounded-circle p-3">
+                        <i class="bi bi-currency-dollar text-{{ $netProfitLoss >= 0 ? 'success' : 'danger' }}" style="font-size: 1.5rem;"></i>
+                    </div>
+                </div>
+                <h2 class="fw-bold text-{{ $netProfitLoss >= 0 ? 'success' : 'danger' }} mb-1">
+                    {{ Auth::user()->getCurrencySymbol() }}{{ number_format(abs($netProfitLoss), 2) }}
+                </h2>
+                <p class="text-muted mb-0 fw-medium">Net P&L</p>
+                <small class="text-{{ $netProfitLoss >= 0 ? 'success' : 'danger' }}">
+                    <i class="bi bi-arrow-{{ $netProfitLoss >= 0 ? 'up' : 'down' }}"></i> {{ $netProfitLoss >= 0 ? 'Profit' : 'Loss' }}
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
+
+<!-- Profit/Loss Matrix and Recent Trade Plans -->
 <div class="row">
-    <div class="col-md-8">
+    @if($profitLossByPair->count() > 0)
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-table"></i> Profit/Loss Matrix by Trading Pair
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover profit-loss-matrix">
+                        <thead>
+                            <tr>
+                                <th>Trading Pair</th>
+                                <th class="text-center">Profit</th>
+                                <th class="text-center">Loss</th>
+                                <th class="text-center">Breakeven</th>
+                                <th class="text-center">Total</th>
+                                <th class="text-center">Win Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($profitLossByPair as $pair => $data)
+                            <tr>
+                                <td>
+                                    <span class="badge bg-light text-dark">{{ $pair }}</span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-success">{{ $data['profit'] }}</span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-danger">{{ $data['loss'] }}</span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-warning">{{ $data['breakeven'] }}</span>
+                                </td>
+                                <td class="text-center fw-bold">{{ $data['total'] }}</td>
+                                <td class="text-center">
+                                    <span class="badge bg-{{ $data['win_rate'] >= 50 ? 'success' : ($data['win_rate'] >= 30 ? 'warning' : 'danger') }}">
+                                        {{ $data['win_rate'] }}%
+                                    </span>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <div class="col-md-{{ $profitLossByPair->count() > 0 ? '6' : '8' }}">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">
@@ -100,6 +229,7 @@
                                     <th>Title</th>
                                     <th>Pair</th>
                                     <th>Status</th>
+                                    <th>Result</th>
                                     <th>Created</th>
                                     <th>Actions</th>
                                 </tr>
@@ -113,6 +243,24 @@
                                         <span class="badge status-{{ $plan->status }} status-badge">
                                             {{ ucfirst($plan->status) }}
                                         </span>
+                                    </td>
+                                    <td>
+                                        @if($plan->status === 'completed' && $plan->trade_result)
+                                            @php
+                                                $resultClass = match($plan->trade_result) {
+                                                    'profit' => 'bg-success',
+                                                    'loss' => 'bg-danger',
+                                                    'breakeven' => 'bg-warning',
+                                                    'pending' => 'bg-secondary',
+                                                    default => 'bg-light text-dark'
+                                                };
+                                            @endphp
+                                            <span class="badge {{ $resultClass }}">
+                                                {{ ucfirst($plan->trade_result) }}
+                                            </span>
+                                        @else
+                                            <span class="text-muted">-</span>
+                                        @endif
                                     </td>
                                     <td>{{ $plan->created_at->format('M d, Y') }}</td>
                                     <td>

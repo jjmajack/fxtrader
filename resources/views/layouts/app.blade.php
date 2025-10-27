@@ -351,6 +351,12 @@
                             </a>
                             <ul class="dropdown-menu">
                                 <li>
+                                    <a class="dropdown-item" href="{{ route('profile.settings') }}">
+                                        <i class="bi bi-gear"></i> Account Settings
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
                                     <form method="POST" action="{{ route('logout') }}">
                                         @csrf
                                         <button type="submit" class="dropdown-item">

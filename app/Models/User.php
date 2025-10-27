@@ -22,6 +22,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'preferred_currency',
+        'timezone',
     ];
 
     /**
@@ -45,6 +47,41 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Get available currencies for selection.
+     */
+    public static function getAvailableCurrencies(): array
+    {
+        return [
+            'USD' => 'US Dollar ($)',
+            'GBP' => 'British Pound (£)',
+            'EUR' => 'Euro (€)',
+            'JPY' => 'Japanese Yen (¥)',
+            'CAD' => 'Canadian Dollar (C$)',
+            'AUD' => 'Australian Dollar (A$)',
+            'CHF' => 'Swiss Franc (CHF)',
+            'CNY' => 'Chinese Yuan (¥)',
+        ];
+    }
+
+    /**
+     * Get currency symbol for the user's preferred currency.
+     */
+    public function getCurrencySymbol(): string
+    {
+        return match($this->preferred_currency) {
+            'USD' => '$',
+            'GBP' => '£',
+            'EUR' => '€',
+            'JPY' => '¥',
+            'CAD' => 'C$',
+            'AUD' => 'A$',
+            'CHF' => 'CHF',
+            'CNY' => '¥',
+            default => '$',
+        };
     }
 
     /**
