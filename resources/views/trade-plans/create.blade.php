@@ -35,7 +35,7 @@
                                 <label for="title" class="form-label fw-semibold">Title *</label>
                                 <input type="text" class="form-control form-control-lg @error('title') is-invalid @enderror" 
                                        id="title" name="title" value="{{ old('title') }}" 
-                                       placeholder="Enter a descriptive title for your trade plan" required>
+                                       placeholder="e.g., EUR/USD Swing Trade - Oct 27" required>
                                 @error('title')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -93,7 +93,7 @@
                                 <select class="form-select @error('strategy') is-invalid @enderror" id="strategy" name="strategy">
                                     <option value="">Select Strategy</option>
                                     @foreach(\App\Models\TradePlan::getStrategies() as $key => $label)
-                                        <option value="{{ $key }}" {{ old('strategy') == $key ? 'selected' : '' }}>
+                                        <option value="{{ $key }}" {{ old('strategy', 'swing_trading') == $key ? 'selected' : '' }}>
                                             {{ $label }}
                                         </option>
                                     @endforeach
@@ -125,7 +125,7 @@
                                 <select class="form-select @error('trade_type') is-invalid @enderror" id="trade_type" name="trade_type">
                                     <option value="">Select Trade Type</option>
                                     @foreach(\App\Models\TradePlan::getTradeTypes() as $key => $label)
-                                        <option value="{{ $key }}" {{ old('trade_type') == $key ? 'selected' : '' }}>
+                                        <option value="{{ $key }}" {{ old('trade_type', 'long') == $key ? 'selected' : '' }}>
                                             {{ $label }}
                                         </option>
                                     @endforeach
@@ -142,7 +142,7 @@
                             <div class="mb-3">
                                 <label for="entry_price" class="form-label">Entry Price</label>
                                 <input type="number" step="0.00001" class="form-control @error('entry_price') is-invalid @enderror" 
-                                       id="entry_price" name="entry_price" value="{{ old('entry_price') }}">
+                                       id="entry_price" name="entry_price" value="{{ old('entry_price') }}" placeholder="0.00000">
                                 @error('entry_price')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -152,7 +152,7 @@
                             <div class="mb-3">
                                 <label for="position_size" class="form-label">Position Size</label>
                                 <input type="number" step="0.00001" class="form-control @error('position_size') is-invalid @enderror" 
-                                       id="position_size" name="position_size" value="{{ old('position_size') }}">
+                                       id="position_size" name="position_size" value="{{ old('position_size') }}" placeholder="0.00000">
                                 @error('position_size')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -165,20 +165,22 @@
                             <div class="mb-3">
                                 <label for="stop_loss" class="form-label">Stop Loss</label>
                                 <input type="number" step="0.00001" class="form-control @error('stop_loss') is-invalid @enderror" 
-                                       id="stop_loss" name="stop_loss" value="{{ old('stop_loss') }}">
+                                       id="stop_loss" name="stop_loss" value="{{ old('stop_loss') }}" placeholder="0.00000">
                                 @error('stop_loss')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
+                                <div class="form-text">Set your risk level</div>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="take_profit" class="form-label">Take Profit</label>
                                 <input type="number" step="0.00001" class="form-control @error('take_profit') is-invalid @enderror" 
-                                       id="take_profit" name="take_profit" value="{{ old('take_profit') }}">
+                                       id="take_profit" name="take_profit" value="{{ old('take_profit') }}" placeholder="0.00000">
                                 @error('take_profit')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
+                                <div class="form-text">Set your profit target</div>
                             </div>
                         </div>
                     </div>
@@ -188,20 +190,22 @@
                             <div class="mb-3">
                                 <label for="risk_reward_ratio" class="form-label">Risk/Reward Ratio</label>
                                 <input type="number" step="0.01" class="form-control @error('risk_reward_ratio') is-invalid @enderror" 
-                                       id="risk_reward_ratio" name="risk_reward_ratio" value="{{ old('risk_reward_ratio') }}">
+                                       id="risk_reward_ratio" name="risk_reward_ratio" value="{{ old('risk_reward_ratio', '2.00') }}" placeholder="2.00">
                                 @error('risk_reward_ratio')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
+                                <div class="form-text">Recommended: 2:1 or higher</div>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="risk_percentage" class="form-label">Risk Percentage (%)</label>
                                 <input type="number" step="0.01" class="form-control @error('risk_percentage') is-invalid @enderror" 
-                                       id="risk_percentage" name="risk_percentage" value="{{ old('risk_percentage') }}">
+                                       id="risk_percentage" name="risk_percentage" value="{{ old('risk_percentage', '1.00') }}" placeholder="1.00">
                                 @error('risk_percentage')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
+                                <div class="form-text">Recommended: 1-2% per trade</div>
                             </div>
                         </div>
                     </div>
