@@ -16,7 +16,48 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     
     <!-- Vite Assets -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @if(app()->environment('production'))
+        {{-- In production, check for manifest at base_path (public_html/build/) --}}
+        @php
+            $manifestPath = base_path('build/manifest.json');
+            $manifestExists = file_exists($manifestPath);
+            
+            if ($manifestExists) {
+                try {
+                    // Try to read manifest and generate links manually
+                    $manifest = json_decode(file_get_contents($manifestPath), true);
+                    $cssEntry = $manifest['resources/css/app.css'] ?? null;
+                    $jsEntry = $manifest['resources/js/app.js'] ?? null;
+                    
+                    if ($cssEntry && isset($cssEntry['file'])) {
+                        echo '<link rel="stylesheet" href="' . asset('build/' . $cssEntry['file']) . '">';
+                    }
+                    if ($jsEntry && isset($jsEntry['file'])) {
+                        echo '<script src="' . asset('build/' . $jsEntry['file']) . '" defer></script>';
+                    }
+                } catch (\Exception $e) {
+                    // If manifest read fails, use fallback
+                    if (file_exists(base_path('build/assets/app.css'))) {
+                        echo '<link rel="stylesheet" href="' . asset('build/assets/app.css') . '">';
+                    }
+                    if (file_exists(base_path('build/assets/app.js'))) {
+                        echo '<script src="' . asset('build/assets/app.js') . '" defer></script>';
+                    }
+                }
+            } else {
+                // No manifest found, use fallback
+                if (file_exists(base_path('build/assets/app.css'))) {
+                    echo '<link rel="stylesheet" href="' . asset('build/assets/app.css') . '">';
+                }
+                if (file_exists(base_path('build/assets/app.js'))) {
+                    echo '<script src="' . asset('build/assets/app.js') . '" defer></script>';
+                }
+            }
+        @endphp
+    @else
+        {{-- Local development - use Vite normally --}}
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @endif
     
     
     

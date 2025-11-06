@@ -13,6 +13,103 @@ Route::get('/', function () {
     return auth()->check() ? redirect('/dashboard') : view('welcome');
 });
 
+// Migration route - bypasses session to run before tables exist
+Route::get('/migrate', function () {
+    $token = request()->query('token');
+    $secretToken = env('MIGRATION_TOKEN', env('APP_KEY', 'your-secret-token'));
+    if ($token !== $secretToken) {
+        return response('Unauthorized - Invalid token', 401);
+    }
+    
+    // Use array driver to avoid database dependency
+    putenv('SESSION_DRIVER=array');
+    config(['session.driver' => 'array']);
+    
+    try {
+        // Clear any cached config
+        \Illuminate\Support\Facades\Artisan::call('config:clear');
+        
+        // Run migrations
+        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        $output = \Illuminate\Support\Facades\Artisan::output();
+        
+        return '<pre>Migrations completed successfully!<br><br>' . htmlspecialchars($output) . '</pre>';
+    } catch (\Exception $e) {
+        return '<pre>Error: ' . htmlspecialchars($e->getMessage()) . '<br><br>Stack trace:<br>' . htmlspecialchars($e->getTraceAsString()) . '</pre>';
+    }
+})->withoutMiddleware([\Illuminate\Session\Middleware\StartSession::class]);
+
+// Clear cache route
+Route::get('/clear-cache', function () {
+    $token = request()->query('token');
+    $secretToken = env('MIGRATION_TOKEN', env('APP_KEY', 'your-secret-token'));
+    if ($token !== $secretToken) {
+        return response('Unauthorized - Invalid token', 401);
+    }
+    
+    try {
+        \Illuminate\Support\Facades\Artisan::call('config:clear');
+        \Illuminate\Support\Facades\Artisan::call('cache:clear');
+        \Illuminate\Support\Facades\Artisan::call('route:clear');
+        \Illuminate\Support\Facades\Artisan::call('view:clear');
+        
+        return '<pre>Cache cleared successfully!</pre>';
+    } catch (\Exception $e) {
+        return '<pre>Error: ' . htmlspecialchars($e->getMessage()) . '</pre>';
+    }
+});
+
+// Check environment variables (for debugging)
+Route::get('/check-env', function () {
+    $token = request()->query('token');
+    $secretToken = env('MIGRATION_TOKEN', env('APP_KEY', 'your-secret-token'));
+    if ($token !== $secretToken) {
+        return response('Unauthorized - Invalid token', 401);
+    }
+    
+    $envPath = base_path('.env');
+    $envExists = file_exists($envPath);
+    $configCached = app()->configurationIsCached();
+    
+    // Check both env() and config() values
+    $dbHostEnv = env('DB_HOST', 'NOT SET');
+    $dbDatabaseEnv = env('DB_DATABASE', 'NOT SET');
+    $dbUsernameEnv = env('DB_USERNAME', 'NOT SET');
+    $dbPasswordEnv = env('DB_PASSWORD') ? '***SET***' : 'NOT SET';
+    $dbConnectionEnv = env('DB_CONNECTION', 'NOT SET');
+    
+    $dbHostConfig = config('database.connections.mysql.host', 'NOT SET');
+    $dbDatabaseConfig = config('database.connections.mysql.database', 'NOT SET');
+    $dbUsernameConfig = config('database.connections.mysql.username', 'NOT SET');
+    $dbPasswordConfig = config('database.connections.mysql.password') ? '***SET***' : 'NOT SET';
+    
+    $output = '<pre>Environment Check:<br><br>';
+    $output .= '<strong>.env file location:</strong> ' . htmlspecialchars($envPath) . '<br>';
+    $output .= '<strong>.env file exists:</strong> ' . ($envExists ? 'YES' : 'NO') . '<br>';
+    $output .= '<strong>Config cached:</strong> ' . ($configCached ? 'YES (this prevents .env from being read!)' : 'NO') . '<br><br>';
+    
+    $output .= '<strong>From env() function:</strong><br>';
+    $output .= 'DB_CONNECTION: ' . htmlspecialchars($dbConnectionEnv) . '<br>';
+    $output .= 'DB_HOST: ' . htmlspecialchars($dbHostEnv) . '<br>';
+    $output .= 'DB_DATABASE: ' . htmlspecialchars($dbDatabaseEnv) . '<br>';
+    $output .= 'DB_USERNAME: ' . htmlspecialchars($dbUsernameEnv) . '<br>';
+    $output .= 'DB_PASSWORD: ' . htmlspecialchars($dbPasswordEnv) . '<br><br>';
+    
+    $output .= '<strong>From config() function (what Laravel actually uses):</strong><br>';
+    $output .= 'DB_HOST: ' . htmlspecialchars($dbHostConfig) . '<br>';
+    $output .= 'DB_DATABASE: ' . htmlspecialchars($dbDatabaseConfig) . '<br>';
+    $output .= 'DB_USERNAME: ' . htmlspecialchars($dbUsernameConfig) . '<br>';
+    $output .= 'DB_PASSWORD: ' . htmlspecialchars($dbPasswordConfig) . '<br><br>';
+    
+    if ($configCached) {
+        $output .= '<strong style="color: red;">WARNING: Config is cached! Clear it first with /clear-config</strong><br>';
+    }
+    
+    $output .= '</pre>';
+    
+    return $output;
+});
+
 
 // Authentication routes
 Route::middleware('guest')->group(function () {
